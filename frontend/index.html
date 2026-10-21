@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copilote RH - HackAVP OPT-NC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #18353a;
+            --muted: #718184;
+            --line: #dce6e1;
+            --paper: #f3f7f3;
+            --surface: #ffffff;
+            --forest: #153c3c;
+            --forest-deep: #102f32;
+            --sea: #16766e;
+            --sea-soft: #e6f3ee;
+            --coral: #dc684e;
+            --coral-soft: #fff0e9;
+            --lime: #d8e98a;
+            --shadow: 0 12px 32px rgba(22, 58, 55, .07);
+            font-family: "DM Sans", sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            color: var(--ink);
+            background-color: var(--paper);
+            background-image: linear-gradient(90deg, rgba(21,60,60,.025) 1px, transparent 1px), linear-gradient(rgba(21,60,60,.025) 1px, transparent 1px);
+            background-size: 34px 34px;
+            font-family: "DM Sans", sans-serif;
+            font-size: 15px;
+        }
+        button, input, select, textarea { font: inherit; }
+        .container-fluid { padding: 0; }
+        .container-fluid > .row { min-height: 100vh; margin: 0; }
+        .sidebar {
+            position: sticky;
+            top: 0;
+            flex: 0 0 270px;
+            width: 270px;
+            height: 100vh;
+            min-height: 0;
+            overflow-y: auto;
+            color: #eef5ee;
+            background: var(--forest);
+            border-right: 1px solid rgba(255,255,255,.08);
+            box-shadow: 8px 0 28px rgba(16,47,50,.08);
+        }
+        .sidebar .p-4 { padding: 28px 24px !important; border-color: rgba(255,255,255,.13) !important; }
+        .sidebar .p-4 .fa-robot { display: grid; place-items: center; width: 38px; height: 38px; color: var(--forest) !important; border-radius: 11px; background: var(--lime); font-size: 17px !important; }
+        .sidebar h1 { color: #fff; font-size: 16px; letter-spacing: 0; }
+        .sidebar small.text-muted { color: #a6bfba !important; }
+        .sidebar .p-3 { padding: 22px 14px !important; }
+        .step-link {
+            position: relative;
+            min-height: 70px;
+            padding: 12px !important;
+            color: #d2e0db;
+            border: 1px solid transparent;
+            border-radius: 8px !important;
+            cursor: pointer;
+            transition: background .18s ease, border-color .18s ease, color .18s ease;
+        }
+        .step-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+        .step-link.active { color: #fff; border-color: rgba(216,233,138,.2); border-left: 1px solid rgba(216,233,138,.2); background: rgba(216,233,138,.1); }
+        .step-link.active::after { position: absolute; top: 13px; right: 0; bottom: 13px; width: 3px; border-radius: 2px; background: var(--lime); content: ""; }
+        .step-link .fw-bold { font-size: 13px !important; }
+        .step-link small { color: #a8c0bb !important; font-size: 11px; }
+        .step-circle {
+            flex: 0 0 38px;
+            width: 38px;
+            height: 38px;
+            color: #e4ede7 !important;
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 10px !important;
+            background: rgba(255,255,255,.08) !important;
+            font-size: 14px;
+        }
+        .step-link.active .step-circle { color: var(--forest) !important; border-color: var(--lime); background: var(--lime) !important; }
+        .step-line { width: 1px; height: 16px; margin-left: 31px; background: rgba(255,255,255,.2); }
+        .container-fluid > .row > .col-md-9.col-lg-10 {
+            flex: 1 1 0;
+            width: auto;
+            min-width: 0;
+            padding: clamp(24px, 4vw, 54px) clamp(22px, 5vw, 76px) 64px !important;
+        }
+        .step-content { width: min(1080px, 100%); margin: 0 auto; animation: appear .3s ease both; }
+        @keyframes appear { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+        .step-content > .mb-4:first-child { margin-bottom: 30px !important; }
+        .step-content h2.h3 { margin: 0; color: var(--ink) !important; font-family: "Fraunces", Georgia, serif; font-size: clamp(27px, 3vw, 36px); font-weight: 500 !important; line-height: 1.15; letter-spacing: 0; }
+        .step-content h2.h3 i { display: none; }
+        .step-content > .mb-4:first-child p { max-width: 680px; margin: 10px 0 0; color: var(--muted) !important; font-size: 14px; line-height: 1.65; }
+        .text-cyan-400, .text-cyan-300 { color: var(--sea) !important; }
+        .text-emerald-400, .text-emerald-300 { color: #287456 !important; }
+        .text-blue-400 { color: #3d7095 !important; }
+        .text-purple-400 { color: #83616d !important; }
+        .text-amber-400 { color: #a56823 !important; }
+        .text-slate-200, .text-slate-300 { color: #405b5b !important; }
+        .text-slate-400 { color: #718184 !important; }
+        .text-white { color: var(--ink) !important; }
+        .text-dark { color: #fff !important; }
+        .bg-slate-900, .bg-slate-950, .bg-slate-800 { background: #f6f9f7 !important; }
+        .bg-slate-700 { background: #78908a !important; }
+        .bg-cyan-500 { background: var(--sea) !important; }
+        .bg-emerald-600 { background: #287456 !important; }
+        .border-slate-700, .border-slate-800 { border-color: var(--line) !important; }
+        .ai-card {
+            position: relative;
+            color: var(--ink);
+            border: 1px solid var(--line) !important;
+            border-radius: 8px !important;
+            background: var(--surface) !important;
+            box-shadow: var(--shadow);
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+        .ai-card h5 { color: var(--ink) !important; font-size: 15px; letter-spacing: 0; }
+        .ai-card p { line-height: 1.6; }
+        .ai-card-clickable:hover, .avp-card:hover { border-color: #87b8a6 !important; background: #fff !important; box-shadow: 0 16px 34px rgba(22,58,55,.12); transform: translateY(-2px); }
+        .border-cyan-500\/40, .border-cyan-500\/30, .border-cyan-500\/60 { border-color: var(--line) !important; }
+        .border-emerald-500\/40 { border-color: var(--line) !important; }
+        .border-blue-500 { border-color: var(--line) !important; }
+        .border-purple-500\/40 { border-color: var(--line) !important; }
+        .border-start.border-4 { border-left-width: 3px !important; }
+        .border-start.border-cyan-400 { border-left-color: var(--sea) !important; }
+        .border-start.border-blue-500 { border-left-color: #4f83a4 !important; }
+        .border-start.border-emerald-500 { border-left-color: #55a37d !important; }
+        .border-start.border-purple-500 { border-left-color: #b0787b !important; }
+        .drop-zone {
+            min-height: 190px;
+            border: 1px dashed #90ada4;
+            border-radius: 8px !important;
+            background: rgba(255,255,255,.76);
+            color: var(--ink);
+            cursor: pointer;
+            transition: border-color .18s ease, background .18s ease;
+        }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--sea); background: var(--sea-soft); }
+        #drop-area > i { color: var(--sea) !important; font-size: 34px !important; }
+        #drop-area h4, #drop-area-diplomes h6 { color: var(--ink); font-size: 16px; font-weight: 700; }
+        #files-actions-container .btn { margin-top: 2px; }
+        .form-control, .form-select, textarea.form-control {
+            min-height: 44px;
+            color: var(--ink) !important;
+            border: 1px solid #cbd8d2 !important;
+            border-radius: 5px !important;
+            background: #fff !important;
+            box-shadow: none;
+        }
+        textarea.form-control { min-height: 104px; resize: vertical; }
+        .form-control:focus, .form-select:focus { border-color: var(--sea) !important; box-shadow: 0 0 0 3px rgba(22,118,110,.13) !important; }
+        .form-label { color: #47605e !important; font-size: 12px; font-weight: 700 !important; }
+        .btn { min-height: 40px; padding: 9px 16px; border-radius: 5px; font-size: 13px; font-weight: 700; letter-spacing: 0; }
+        .btn-primary, .btn-cyan, .btn-purple, .btn-success { color: #fff !important; border-color: var(--sea) !important; background: var(--sea) !important; box-shadow: none !important; }
+        .btn-primary:hover, .btn-cyan:hover, .btn-purple:hover, .btn-success:hover { border-color: var(--forest) !important; background: var(--forest) !important; }
+        .btn-outline-secondary { color: #4f6562; border-color: #b9c9c3; background: #fff; }
+        .btn-outline-secondary:hover { color: var(--forest); border-color: #8ca49c; background: #f6faf7; }
+        .badge { padding: 6px 9px !important; border-radius: 4px !important; font-size: 10px !important; font-weight: 700; letter-spacing: .02em; }
+        .status-pulse { animation: none; }
+        #ingestion-success-badge { color: #226746 !important; border: 1px solid #c8e2d3 !important; border-radius: 7px !important; background: #eff8f1 !important; }
+        .avp-card { background: #fff !important; }
+        .modal-content { overflow: hidden; color: var(--ink) !important; border: 1px solid var(--line) !important; border-radius: 9px !important; background: #fff !important; box-shadow: 0 24px 70px rgba(16,47,50,.22); }
+        .modal-header, .modal-footer { border-color: var(--line) !important; background: #f8faf8 !important; }
+        .modal-header { padding: 18px 22px; }
+        .modal-title { color: var(--ink) !important; font-size: 16px; }
+        .modal-body { color: #415957 !important; background: #fff !important; }
+        .modal-body .bg-slate-950, .modal-body .bg-slate-950\/60 { border: 1px solid var(--line); background: #f7faf8 !important; }
+        .modal-body .text-slate-300, .modal-body .text-slate-200 { color: #405b5b !important; }
+        .modal-body .text-cyan-300 { color: var(--sea) !important; }
+        .modal-backdrop.show { opacity: .45; }
+        .matching-source-heading, .matching-source-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .matching-source-heading h3 { margin: 0; color: var(--ink); font-size: 16px; font-weight: 700; }
+        .matching-source-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+        .matching-state { color: #627773; font-size: 11px; }
+        .matching-source-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+        .matching-source-option { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 12px 14px; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; background: #fff; text-align: left; transition: border-color .16s ease, background .16s ease, box-shadow .16s ease; }
+        .matching-source-option:hover { border-color: #8fb5a7; background: #fbfdfb; }
+        .matching-source-option.active { border-color: var(--sea); background: var(--sea-soft); box-shadow: inset 0 0 0 1px var(--sea); }
+        .matching-source-icon { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; color: var(--sea); border-radius: 5px; background: #fff; }
+        .matching-source-copy { display: grid; gap: 4px; min-width: 0; }
+        .matching-source-copy strong { font-size: 13px; }
+        .matching-source-copy small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+        .matching-source-check { display: grid; flex: 0 0 19px; width: 19px; height: 19px; place-items: center; margin-left: auto; color: #fff; border: 1px solid #b7c7c0; border-radius: 50%; background: #fff; font-size: 9px; }
+        .matching-source-option.active .matching-source-check { border-color: var(--sea); background: var(--sea); }
+        .matching-source-footer { padding-top: 14px; border-top: 1px solid var(--line); }
+        .matching-source-footer > span { color: var(--muted); font-size: 11px; }
+        .matching-source-footer .btn { min-width: 190px; }
+        #diplomes-files-list > div, #selected-files-list > div { border-radius: 5px !important; background: #fff !important; }
+        #final-status-box { color: #246547 !important; border: 1px solid #c9e2d3 !important; border-radius: 7px !important; background: #eef8f1 !important; }
+        #final-status-box code { color: #245c49; }
+        @media (max-width: 767.98px) {
+            .container-fluid > .row { display: block; }
+            .sidebar { position: relative; width: 100%; height: auto; overflow: visible; }
+            .sidebar .p-4 { padding: 15px 18px !important; }
+            .sidebar .p-4 .fa-robot { width: 34px; height: 34px; }
+            .sidebar .p-3 { display: flex; gap: 7px; overflow-x: auto; padding: 10px !important; }
+            .sidebar .step-link { flex: 0 0 185px; min-height: 58px; padding: 8px !important; gap: 9px !important; }
+            .sidebar .step-link .fw-bold { font-size: 11px !important; }
+            .sidebar .step-link small { font-size: 10px; }
+            .step-circle { flex-basis: 32px; width: 32px; height: 32px; }
+            .step-line { display: none; }
+            .container-fluid > .row > .col-md-9.col-lg-10 { padding: 25px 16px 44px !important; }
+            .step-content > .mb-4:first-child { margin-bottom: 22px !important; }
+            .step-content h2.h3 { font-size: 27px; }
+            #files-actions-container .btn { width: 100%; white-space: normal; }
+            .matching-source-heading, .matching-source-footer { align-items: flex-start; flex-direction: column; }
+            .matching-source-options { grid-template-columns: 1fr; }
+            .matching-source-footer .btn { width: 100%; }
+            .modal-dialog { margin: 12px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- SIDEBAR : FIL CONDUCTEUR VERTICAL -->
+        <div class="col-md-3 col-lg-2 p-0 sidebar">
+            <div class="p-4 border-bottom border-secondary">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-robot text-cyan-400 fs-4"></i>
+                    <h1 class="h5 mb-0 fw-bold text-white">Copilote RH</h1>
+                </div>
+                <small class="text-muted">OPT-NC • HackAVP</small>
+            </div>
+
+            <div class="p-3">
+                <div id="nav-step-1" class="step-link active p-3 rounded d-flex align-items-center gap-3" onclick="switchStep(1)">
+                    <div class="step-circle bg-cyan-500 text-dark"><i class="fa-solid fa-file-upload"></i></div>
+                    <div>
+                        <div class="fw-bold fs-6">1. Ingestion Profil</div>
+                        <small class="text-slate-400">Glisser-déposer CVs</small>
+                    </div>
+                </div>
+                <div class="step-line"></div>
+
+                <div id="nav-step-2" class="step-link p-3 rounded d-flex align-items-center gap-3" onclick="switchStep(2)">
+                    <div class="step-circle bg-slate-700 text-slate-300"><i class="fa-solid fa-sliders"></i></div>
+                    <div>
+                        <div class="fw-bold fs-6">2. Matching</div>
+                        <small class="text-slate-400">Postes Propices (IA)</small>
+                    </div>
+                </div>
+                <div class="step-line"></div>
+
+                <div id="nav-step-3" class="step-link p-3 rounded d-flex align-items-center gap-3" onclick="switchStep(3)">
+                    <div class="step-circle bg-slate-700 text-slate-300"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div>
+                        <div class="fw-bold fs-6">3. Assets IA</div>
+                        <small class="text-slate-400">Documents & PDF DRH</small>
+                    </div>
+                </div>
+                <div class="step-line"></div>
+
+                <div id="nav-step-4" class="step-link p-3 rounded d-flex align-items-center gap-3" onclick="switchStep(4)">
+                    <div class="step-circle bg-slate-700 text-slate-300"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div>
+                        <div class="fw-bold fs-6">4. Soumission Cloud</div>
+                        <small class="text-slate-400">Firestore & GCS</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENU PRINCIPAL PAR ÉTAPES -->
+        <div class="col-md-9 col-lg-10 p-4 p-md-5">
+
+            <!-- ================= ÉTAPE 1 : INGESTION ================= -->
+            <div id="step-content-1" class="step-content">
+                <div class="mb-4">
+                    <h2 class="h3 fw-bold text-cyan-400 mb-2"><i class="fa-solid fa-door-open me-2"></i>Étape 1 : Ingestion du Profil Candidat</h2>
+                    <p class="text-slate-400">Déposez vos fichiers PDF (CVs, certificats) pour lancer l'analyse et le croisement automatique.</p>
+                </div>
+
+                <div id="ingestion-success-badge" class="d-none p-3 mb-4 rounded-xl bg-cyan-950/60 border border-cyan-500/60 text-cyan-300 status-pulse d-flex align-items-center gap-3">
+                    <i class="fa-solid fa-circle-check fs-3 text-cyan-400"></i>
+                    <div>
+                        <strong class="d-block fs-6">Ingestion et Croisement BDD Réussis !</strong>
+                        <span class="fs-7 text-slate-300">Affichage des postes propices à l'Étape 2...</span>
+                    </div>
+                </div>
+
+                <div class="drop-zone p-5 rounded-3 text-center mb-3" id="drop-area">
+                    <i class="fa-solid fa-cloud-arrow-up text-cyan-400 display-4 mb-3"></i>
+                    <h4 class="fw-semibold">Glissez-déposez vos fichiers PDF ici</h4>
+                    <p class="text-slate-400 fs-7">ou cliquez pour sélectionner vos documents</p>
+                    <input type="file" id="file-input" class="d-none" accept=".pdf,.txt" multiple>
+                </div>
+
+                <div id="files-actions-container" class="mb-4 d-none">
+                    <div id="selected-files-list" class="d-flex flex-wrap gap-2 mb-3"></div>
+                    <button class="btn btn-cyan bg-cyan-500 text-dark fw-bold px-4 py-2 shadow" onclick="lancerIngestionEtMatching()">
+                        <i class="fa-solid fa-upload me-2"></i>Analyser le profil
+                    </button>
+                </div>
+
+                <div class="ai-card p-4 mb-4">
+                    <label class="form-label text-slate-300 fw-medium">Ou saisissez / collez le profil textuel :</label>
+                    <textarea id="profil_brut" class="form-control bg-slate-900 text-white border-slate-700" rows="3" placeholder="Ex: Expérience en management ou technique..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary bg-cyan-500 border-0 px-4 py-2 text-dark fw-bold shadow" onclick="lancerIngestionEtMatching()">
+                        Analyser le profil <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= ÉTAPE 2 : POSTES PROPICES ================= -->
+            <div id="step-content-2" class="step-content d-none">
+                <div class="mb-4">
+                    <h2 class="h3 fw-bold text-cyan-400 mb-2"><i class="fa-solid fa-sliders me-2"></i>Étape 2 : Choisir un référentiel</h2>
+                    <p class="text-slate-400">Comparez votre profil au référentiel des métiers ou aux offres d’emploi AVP de l’OPT-NC. Vous pouvez changer de source à tout moment.</p>
+                </div>
+
+                <section class="ai-card matching-source-panel p-4 mb-4" aria-labelledby="matching-source-title">
+                    <div class="matching-source-heading">
+                        <div>
+                            <h3 id="matching-source-title">Source du matching</h3>
+                            <p id="matching-source-description">Recherche sémantique parmi les AVP disponibles.</p>
+                        </div>
+                        <span id="matching-state" class="matching-state" role="status" aria-live="polite">Profil prêt à comparer</span>
+                    </div>
+                    <div class="matching-source-options" role="group" aria-label="Choisir le référentiel de matching">
+                        <button type="button" class="matching-source-option" data-matching-source="metiers" aria-pressed="false">
+                            <span class="matching-source-icon"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i></span>
+                            <span class="matching-source-copy"><strong>Référentiel des métiers</strong><small>Explorer les familles et fonctions OPT-NC</small></span>
+                            <span class="matching-source-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                        </button>
+                        <button type="button" class="matching-source-option active" data-matching-source="avps" aria-pressed="true">
+                            <span class="matching-source-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                            <span class="matching-source-copy"><strong>Offres AVP ouvertes</strong><small>Rechercher dans les avis de vacance de poste</small></span>
+                            <span class="matching-source-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                        </button>
+                    </div>
+                    <div class="matching-source-footer">
+                        <span id="matching-source-caption">Source sélectionnée : AVP</span>
+                        <button id="btn-run-matching" type="button" class="btn btn-primary bg-cyan-500 border-0 text-white fw-bold" onclick="executerMatching()">
+                            <i class="fa-solid fa-magnifying-glass me-2"></i>Lancer le matching
+                        </button>
+                    </div>
+                </section>
+
+                <div class="row g-3 mb-4" id="dynamic-avp-results-container">
+                    <div class="col-12 text-center text-slate-400 py-5">
+                        <i class="fa-solid fa-arrow-up-right-from-square fa-2x mb-3 text-cyan-400"></i>
+                        <p>Choisissez une source puis lancez le matching.</p>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-secondary" onclick="switchStep(1)"><i class="fa-solid fa-arrow-left me-2"></i>Retour</button>
+                    <button class="btn btn-primary bg-cyan-500 border-0 px-4 py-2 text-dark fw-bold" onclick="switchStep(3)">
+                        Passer aux Assets <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= ÉTAPE 3 : ASSETS IA & PIÈCES DIPLÔMES ================= -->
+            <div id="step-content-3" class="step-content d-none">
+                <div class="mb-4">
+                    <h2 class="h3 fw-bold text-cyan-400 mb-2"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Étape 3 : Réponses du Copilote IA & Pièces Requis</h2>
+                    <p class="text-slate-400">Génération automatique des documents professionnels et suivi des pièces jointes pour l'OPT-NC.</p>
+                </div>
+
+                <!-- Bouton de Génération Globale -->
+                <div class="d-flex justify-content-center mb-4">
+                    <button id="btn-generer-assets" class="btn btn-cyan bg-gradient-to-r from-cyan-500 to-blue-600 text-white fw-bold px-5 py-3 shadow-lg fs-6" onclick="genererAssets()">
+                        <i class="fa-solid fa-gears me-2"></i>Lancer la Génération des Assets & PDF
+                    </button>
+                </div>
+
+                <!-- GRILLE DES 4 CARS D'ASSETS AVEC BADGES DYNAMIQUES -->
+                <div class="row g-4 mb-4">
+                    <!-- Carré 1 : CV Structuré OPT -->
+                    <div class="col-md-6">
+                        <div class="ai-card p-4 h-100 border-start border-4 border-cyan-400">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2 text-cyan-400">
+                                    <i class="fa-solid fa-id-card fs-4"></i>
+                                    <h5 class="fw-bold mb-0">1. CV Structuré OPT</h5>
+                                </div>
+                                <span id="badge-status-cv" class="badge bg-red-500/20 text-red-400 border border-red-500/40 px-3 py-1 fs-7">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i>À Générer
+                                </span>
+                            </div>
+                            <div id="asset-cv" class="text-slate-300 fs-7"><em class="text-muted">En attente de génération...</em></div>
+                        </div>
+                    </div>
+
+                    <!-- Carré 2 : Lettre de Motivation -->
+                    <div class="col-md-6">
+                        <div class="ai-card p-4 h-100 border-start border-4 border-blue-500">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2 text-blue-400">
+                                    <i class="fa-solid fa-envelope-open-text fs-4"></i>
+                                    <h5 class="fw-bold mb-0">2. Lettre de Motivation</h5>
+                                </div>
+                                <span id="badge-status-lettre" class="badge bg-red-500/20 text-red-400 border border-red-500/40 px-3 py-1 fs-7">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i>À Générer
+                                </span>
+                            </div>
+                            <div id="asset-lettre" class="text-slate-300 fs-7"><em class="text-muted">En attente de génération...</em></div>
+                        </div>
+                    </div>
+
+                    <!-- Carré 3 : Fiche de Renseignements PDF (Cliquable pour choix) -->
+                    <div class="col-md-6">
+                        <div class="ai-card ai-card-clickable p-4 h-100 border-start border-4 border-emerald-500" onclick="ouvrirModalFicheRenseignements()">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2 text-emerald-400">
+                                    <i class="fa-solid fa-file-pdf fs-4"></i>
+                                    <h5 class="fw-bold mb-0">3. Fiche Renseignements PDF</h5>
+                                </div>
+                                <span id="badge-status-fiche" class="badge bg-red-500/20 text-red-400 border border-red-500/40 px-3 py-1 fs-7">
+                                    <i class="fa-solid fa-pen me-1"></i>Saisir / Cocher
+                                </span>
+                            </div>
+                            <div id="asset-fiche-pdf" class="text-slate-300 fs-7">
+                                <p class="mb-2">Document officiel DRH OPT-NC.</p>
+                                <span class="text-cyan-400 fw-semibold fs-7"><i class="fa-solid fa-sliders me-1"></i> Cliquer pour compléter les informations légales</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carré 4 : Attestation de Non-Rupture PDF (Cliquable pour choix) -->
+                    <div class="col-md-6">
+                        <div class="ai-card ai-card-clickable p-4 h-100 border-start border-4 border-purple-500" onclick="ouvrirModalAttestation()">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2 text-purple-400">
+                                    <i class="fa-solid fa-file-signature fs-4"></i>
+                                    <h5 class="fw-bold mb-0">4. Attestation Non-Rupture</h5>
+                                </div>
+                                <span id="badge-status-attestation" class="badge bg-red-500/20 text-red-400 border border-red-500/40 px-3 py-1 fs-7">
+                                    <i class="fa-solid fa-pen me-1"></i>Saisir / Cocher
+                                </span>
+                            </div>
+                            <div id="asset-attestation-pdf" class="text-slate-300 fs-7">
+                                <p class="mb-2">Attestation sur l'honneur de non-bénéfice de rupture conventionnelle.</p>
+                                <span class="text-cyan-400 fw-semibold fs-7"><i class="fa-solid fa-signature me-1"></i> Cliquer pour renseigner la signature & lieu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ZONE DRAG & DROP DÉDIÉE : DIPLÔMES ET JUSTIFICATIFS COMPLÉMENTAIRES -->
+                <div class="ai-card p-4 border border-cyan-500/40">
+                    <h5 class="fw-bold text-cyan-400 mb-2"><i class="fa-solid fa-graduation-cap me-2"></i>Ajouter des Diplômes ou Justificatifs Complémentaires</h5>
+                    <p class="text-slate-400 fs-7 mb-3">Déposez vos diplômes, attestation de citoyenneté ou justificatifs de résidence pour compléter votre dossier de candidature.</p>
+                   
+                    <div class="drop-zone p-4 rounded-3 text-center" id="drop-area-diplomes">
+                        <i class="fa-solid fa-file-circle-plus text-cyan-400 fs-2 mb-2"></i>
+                        <h6 class="fw-semibold mb-1">Glissez vos diplômes & justificatifs ici</h6>
+                        <small class="text-slate-400">Formats acceptés : PDF, PNG, JPG</small>
+                        <input type="file" id="file-input-diplomes" class="d-none" accept=".pdf,.png,.jpg,.jpeg" multiple>
+                    </div>
+                    <div id="diplomes-files-list" class="d-flex flex-wrap gap-2 mt-3"></div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-outline-secondary" onclick="switchStep(2)"><i class="fa-solid fa-arrow-left me-2"></i>Retour</button>
+                    <button class="btn btn-primary bg-cyan-500 border-0 px-4 py-2 text-dark fw-bold" onclick="switchStep(4)">
+                        Finaliser & Soumettre <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= ÉTAPE 4 : SOUMISSION CLOUD ================= -->
+            <div id="step-content-4" class="step-content d-none">
+                <div class="mb-4">
+                    <h2 class="h3 fw-bold text-cyan-400 mb-2"><i class="fa-solid fa-cloud-arrow-up me-2"></i>Étape 4 : Soumission & Archivage Cloud</h2>
+                    <p class="text-slate-400">Validation et enregistrement sécurisé dans Firestore et Google Cloud Storage.</p>
+                </div>
+
+                <div class="ai-card p-4 mb-4 border border-cyan-500/30">
+                    <div class="mb-3">
+                        <label class="form-label text-slate-300 fw-medium">Adresse E-mail du Candidat *</label>
+                        <input type="email" id="candidat_email" class="form-control bg-slate-900 text-white border-slate-700" placeholder="exemple@domaine.nc" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-slate-300 fw-medium">Poste Cible Confirmé</label>
+                        <input type="text" id="final_avp_cible" class="form-control bg-slate-900 text-white border-slate-700" value="Non défini" readonly>
+                    </div>
+
+                    <button class="btn btn-success bg-emerald-600 border-0 w-100 py-3 fw-bold fs-6 shadow" onclick="soumettreToutAuCloud()">
+                        <i class="fa-solid fa-paper-plane me-2"></i>Envoyer le Dossier Candidat
+                    </button>
+                </div>
+
+                <div id="final-status-box" class="d-none p-4 rounded-3 bg-emerald-950/40 border border-emerald-500/30 text-emerald-300"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 1 : DÉTAIL MATCHING AVP -->
+<div class="modal fade" id="avpDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border border-cyan-500/40">
+            <div class="modal-header border-bottom border-slate-700 bg-slate-900">
+                <h5 class="modal-title fw-bold text-cyan-400" id="modal-title"><i class="fa-solid fa-robot me-2"></i>Analyse Explicable du Poste</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-slate-900/95" id="modal-body-content"></div>
+            <div class="modal-footer border-top border-slate-700 bg-slate-900">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary btn-sm bg-cyan-500 border-0 text-dark fw-bold" onclick="fermerModalEtPasserStep3()">Choisir ce résultat & Continuer <i class="fa-solid fa-arrow-right ms-1"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2 : INFORMATIONS FICHE DE RENSEIGNEMENTS PDF -->
+<div class="modal fade" id="modalFicheRenseignements" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border border-emerald-500/40">
+            <div class="modal-header border-bottom border-slate-700 bg-slate-900">
+                <h5 class="modal-title fw-bold text-emerald-400"><i class="fa-solid fa-file-pen me-2"></i>Options Fiche de Renseignements OPT-NC</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-slate-900/95">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Civilité *</label>
+                        <select id="inj_civilite" class="form-select bg-slate-900 text-white border-slate-700 fs-7">
+                            <option value="M">M. (Monsieur)</option>
+                            <option value="MME">Mme (Madame)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Nationalité Française *</label>
+                        <select id="inj_nationalite" class="form-select bg-slate-900 text-white border-slate-700 fs-7">
+                            <option value="true">Oui</option>
+                            <option value="false">Non</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Statut Professionnel *</label>
+                        <select id="inj_statut_pro" class="form-select bg-slate-900 text-white border-slate-700 fs-7">
+                            <option value="prive">Secteur Privé / Recherche emploi</option>
+                            <option value="fct_nc">Fonctionnaire NC / Communes</option>
+                            <option value="contractuel_nc">Agent Contractuel FP de NC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Nom et Prénoms *</label>
+                        <input type="text" id="inj_nom_prenom" class="form-control bg-slate-900 text-white border-slate-700 fs-7" placeholder="Ex: Japheth ROKO">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Téléphone *</label>
+                        <input type="text" id="inj_telephone" class="form-control bg-slate-900 text-white border-slate-700 fs-7" placeholder="Ex: 77.12.34">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Adresse E-mail *</label>
+                        <input type="email" id="inj_email" class="form-control bg-slate-900 text-white border-slate-700 fs-7" placeholder="exemple@domaine.nc">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Citoyenneté Calédonienne *</label>
+                        <select id="inj_citoyen" class="form-select bg-slate-900 text-white border-slate-700 fs-7">
+                            <option value="true">Citoyen Calédonien</option>
+                            <option value="false">Résident NC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Années de Résidence</label>
+                        <input type="text" id="inj_annees_residence" class="form-control bg-slate-900 text-white border-slate-700 fs-7" placeholder="Ex: 15 ans">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-slate-300 fs-7 fw-medium">Reconnaissance Handicap</label>
+                        <select id="inj_handicap" class="form-select bg-slate-900 text-white border-slate-700 fs-7">
+                            <option value="false">Non</option>
+                            <option value="true">Oui</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-slate-700 bg-slate-900">
+                <button type="button" class="btn btn-success bg-emerald-600 border-0 text-white fw-bold" onclick="validerFicheRenseignements()">Valider & Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 3 : ATTESTATION NON-RUPTURE PDF -->
+<div class="modal fade" id="modalAttestation" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border border-purple-500/40">
+            <div class="modal-header border-bottom border-slate-700 bg-slate-900">
+                <h5 class="modal-title fw-bold text-purple-400"><i class="fa-solid fa-signature me-2"></i>Signature Attestation Non-Rupture</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-slate-900/95">
+                <div class="mb-3">
+                    <label class="form-label text-slate-300 fs-7 fw-medium">Lieu de Signature *</label>
+                    <input type="text" id="inj_lieu_signature" class="form-control bg-slate-900 text-white border-slate-700 fs-7" value="Nouméa">
+                </div>
+                <p class="fs-7 text-slate-400 mb-0"><i class="fa-solid fa-info-circle me-1"></i> En enregistrant, l'attestation sur l'honneur sera automatiquement datée du jour et signée numériquement.</p>
+            </div>
+            <div class="modal-footer border-top border-slate-700 bg-slate-900">
+                <button type="button" class="btn btn-purple bg-purple-600 border-0 text-white fw-bold" onclick="validerAttestation()">Valider & Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API_BASE = "http://localhost:8000";
+    let profilStructureGlobal = null;
+    let selectedFiles = [];
+    let selectedDiplomesFiles = [];
+    let postesPropicesGlobal = [];
+    let posteCibleActuel = "";
+    let sourceMatchingActuelle = "avps";
+
+    function escapeHtml(value = "") {
+        return String(value).replace(/[&<>"']/g, character => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        })[character]);
+    }
+
+    function switchStep(step) {
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`step-content-${i}`).classList.add('d-none');
+            const nav = document.getElementById(`nav-step-${i}`);
+            nav.classList.remove('active');
+            nav.querySelector('.step-circle').classList.replace('bg-cyan-500', 'bg-slate-700');
+            nav.querySelector('.step-circle').classList.replace('text-dark', 'text-slate-300');
+        }
+        document.getElementById(`step-content-${step}`).classList.remove('d-none');
+        const activeNav = document.getElementById(`nav-step-${step}`);
+        activeNav.classList.add('active');
+        activeNav.querySelector('.step-circle').classList.replace('bg-slate-700', 'bg-cyan-500');
+        activeNav.querySelector('.step-circle').classList.replace('text-slate-300', 'text-dark');
+    }
+
+    // Gestion Drag & Drop Étape 1
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
+    dropArea.addEventListener('click', () => fileInput.click());
+    dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.classList.add('dragover'); });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) { handleFiles(e.dataTransfer.files); }
+    });
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); });
+
+    function handleFiles(files) {
+        for (let file of files) { selectedFiles.push(file); }
+        renderFilesList();
+    }
+
+    function renderFilesList() {
+        const container = document.getElementById('selected-files-list');
+        const actionsContainer = document.getElementById('files-actions-container');
+        container.innerHTML = '';
+
+        if (selectedFiles.length > 0) {
+            actionsContainer.classList.remove('d-none');
+            selectedFiles.forEach((file, index) => {
+                const badge = document.createElement('div');
+                badge.className = "d-flex align-items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 border border-cyan-500/40 text-slate-200 fs-7 shadow-sm";
+                badge.innerHTML = `
+                    <i class="fa-solid fa-file-pdf text-red-400 fs-5"></i>
+                    <span class="fw-medium">${file.name}</span>
+                    <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.5rem;" onclick="removeFile(${index})"></button>
+                `;
+                container.appendChild(badge);
+            });
+        } else {
+            actionsContainer.classList.add('d-none');
+        }
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        renderFilesList();
+    }
+
+    // Gestion Drag & Drop Diplômes Étape 3
+    const dropAreaDiplomes = document.getElementById('drop-area-diplomes');
+    const fileInputDiplomes = document.getElementById('file-input-diplomes');
+    dropAreaDiplomes.addEventListener('click', () => fileInputDiplomes.click());
+    dropAreaDiplomes.addEventListener('dragover', (e) => { e.preventDefault(); dropAreaDiplomes.classList.add('dragover'); });
+    dropAreaDiplomes.addEventListener('dragleave', () => dropAreaDiplomes.classList.remove('dragover'));
+    dropAreaDiplomes.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropAreaDiplomes.classList.remove('dragover');
+        if (e.dataTransfer.files.length) { handleDiplomesFiles(e.dataTransfer.files); }
+    });
+    fileInputDiplomes.addEventListener('change', (e) => { if (e.target.files.length) handleDiplomesFiles(e.target.files); });
+
+    function handleDiplomesFiles(files) {
+        for (let file of files) { selectedDiplomesFiles.push(file); }
+        renderDiplomesFilesList();
+    }
+
+    function renderDiplomesFilesList() {
+        const container = document.getElementById('diplomes-files-list');
+        container.innerHTML = '';
+        selectedDiplomesFiles.forEach((file, index) => {
+            const badge = document.createElement('div');
+            badge.className = "d-flex align-items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 border border-emerald-500/40 text-emerald-300 fs-7 shadow-sm";
+            badge.innerHTML = `
+                <i class="fa-solid fa-graduation-cap text-emerald-400 fs-5"></i>
+                <span class="fw-medium">${file.name}</span>
+                <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.5rem;" onclick="removeDiplomeFile(${index})"></button>
+            `;
+            container.appendChild(badge);
+        });
+    }
+
+    function removeDiplomeFile(index) {
+        selectedDiplomesFiles.splice(index, 1);
+        renderDiplomesFilesList();
+    }
+
+    // Modaux Étape 3
+    function ouvrirModalFicheRenseignements() {
+        new bootstrap.Modal(document.getElementById('modalFicheRenseignements')).show();
+    }
+
+    function validerFicheRenseignements() {
+        const badge = document.getElementById('badge-status-fiche');
+        badge.className = "badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 fs-7";
+        badge.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>Prêt & Rempli`;
+       
+        bootstrap.Modal.getInstance(document.getElementById('modalFicheRenseignements')).hide();
+    }
+
+    function ouvrirModalAttestation() {
+        new bootstrap.Modal(document.getElementById('modalAttestation')).show();
+    }
+
+    function validerAttestation() {
+        const badge = document.getElementById('badge-status-attestation');
+        badge.className = "badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 fs-7";
+        badge.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>Prêt & Signé`;
+       
+        bootstrap.Modal.getInstance(document.getElementById('modalAttestation')).hide();
+    }
+
+    // Ingestion du profil avant le choix de la source de matching.
+    async function lancerIngestionEtMatching() {
+        const texte = document.getElementById('profil_brut').value;
+        if (selectedFiles.length === 0 && !texte) {
+            alert("Veuillez déposer un fichier PDF ou saisir un profil.");
+            return;
+        }
+
+        const formData = new FormData();
+        if (selectedFiles.length > 0) {
+            selectedFiles.forEach(f => formData.append("files", f));
+        }
+        if (texte) {
+            formData.append("description_brute", texte);
+        }
+
+        try {
+            const res1 = await fetch(`${API_BASE}/api/candidat/ingestion`, {
+                method: 'POST',
+                body: formData
+            });
+            const data1 = await res1.json();
+            if (!res1.ok) throw new Error(data1.detail || "Échec de l'analyse du profil.");
+            profilStructureGlobal = data1.resultat;
+            if (!profilStructureGlobal) throw new Error("Le backend n'a pas retourné de profil structuré.");
+
+            document.getElementById('ingestion-success-badge').classList.remove('d-none');
+            switchStep(2);
+            await executerMatching();
+
+        } catch (e) {
+            document.getElementById('dynamic-avp-results-container').innerHTML = `<div class="col-12"><div class="alert alert-danger">${escapeHtml(e.message)}</div></div>`;
+            alert("Erreur lors de l'analyse du profil : " + e.message);
+        }
+    }
+
+    async function executerMatching() {
+        if (!profilStructureGlobal) {
+            document.getElementById('matching-state').textContent = "Analysez d’abord le profil à l’étape 1.";
+            switchStep(1);
+            return;
+        }
+
+        const source = sourceMatchingActuelle;
+        const nomSource = source === "metiers" ? "API Métiers" : "API des AVP";
+        const container = document.getElementById('dynamic-avp-results-container');
+        const button = document.getElementById('btn-run-matching');
+        const sourceButtons = document.querySelectorAll('.matching-source-option');
+        container.innerHTML = `<div class="col-12 text-center text-cyan-400 py-5"><i class="fa-solid fa-spinner fa-spin fa-2x mb-3"></i><p>Recherche en cours dans ${nomSource}…</p></div>`;
+        document.getElementById('matching-state').textContent = `Interrogation de ${nomSource}…`;
+        button.disabled = true;
+        sourceButtons.forEach(option => { option.disabled = true; });
+
+        try {
+            const response = await fetch(`${API_BASE}/api/candidat/matching`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profil_structurer: profilStructureGlobal,
+                    source_matching: source
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || `Erreur HTTP ${response.status}`);
+
+            let result = data.resultat;
+            if (typeof result === 'string') result = JSON.parse(result);
+            postesPropicesGlobal = Array.isArray(result?.postes_propices) ? result.postes_propices : [];
+            afficherPostesPropicesDynamiques(postesPropicesGlobal);
+            document.getElementById('matching-state').textContent = `${postesPropicesGlobal.length} résultat(s) depuis ${nomSource}`;
+        } catch (error) {
+            postesPropicesGlobal = [];
+            container.innerHTML = `<div class="col-12"><div class="alert alert-danger"><strong>Matching indisponible.</strong><br>${escapeHtml(error.message)}</div></div>`;
+            document.getElementById('matching-state').textContent = `Échec de la recherche dans ${nomSource}`;
+        } finally {
+            button.disabled = false;
+            sourceButtons.forEach(option => { option.disabled = false; });
+        }
+    }
+
+    function choisirSourceMatching(source) {
+        if (!['metiers', 'avps'].includes(source) || source === sourceMatchingActuelle) return;
+        sourceMatchingActuelle = source;
+        posteCibleActuel = "";
+        document.getElementById('final_avp_cible').value = "Non défini";
+        document.querySelectorAll('.matching-source-option').forEach(option => {
+            const isActive = option.dataset.matchingSource === source;
+            option.classList.toggle('active', isActive);
+            option.setAttribute('aria-pressed', String(isActive));
+        });
+
+        const isMetiers = source === 'metiers';
+        document.getElementById('matching-source-description').textContent = isMetiers
+            ? "Analyse parmi les métiers et fonctions du référentiel OPT-NC."
+            : "Recherche sémantique parmi les avis de vacance de poste disponibles.";
+        document.getElementById('matching-source-caption').textContent = `Source sélectionnée : ${isMetiers ? "Métiers" : "AVP"}`;
+        if (profilStructureGlobal) executerMatching();
+    }
+
+    document.querySelectorAll('.matching-source-option').forEach(option => {
+        option.addEventListener('click', () => choisirSourceMatching(option.dataset.matchingSource));
+    });
+
+    function afficherPostesPropicesDynamiques(postes) {
+        const container = document.getElementById('dynamic-avp-results-container');
+        container.innerHTML = '';
+
+        if (!postes || postes.length === 0) {
+            const sourceLabel = sourceMatchingActuelle === 'metiers' ? 'le référentiel des métiers' : 'les AVP ouverts';
+            container.innerHTML = `<div class="col-12 text-center text-amber-400 py-4">Aucun résultat pertinent trouvé dans ${sourceLabel} pour ce profil.</div>`;
+            return;
+        }
+
+        postes.forEach((p, idx) => {
+            let fiche = p.fiche_explicable || p;
+            const code = p.code_metier || p.code_avp || p.code || '';
+            const labelCode = sourceMatchingActuelle === 'metiers' ? 'Code métier' : 'Code AVP';
+            container.innerHTML += `
+                <div class="col-md-6 col-lg-4">
+                    <div class="ai-card p-4 h-100 avp-card border border-cyan-500/40 rounded-3 shadow-sm" onclick="ouvrirModalDetailPropice(${idx})">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <span class="badge bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">${escapeHtml(code || 'OPT-NC')} · ${labelCode}</span>
+                            <span class="fw-bold text-emerald-400 fs-5">${escapeHtml(p.score_matching || '—')}</span>
+                        </div>
+                        <h5 class="fw-bold text-white mb-2">${escapeHtml(p.intitule || 'Résultat sans intitulé')}</h5>
+                        <p class="text-slate-400 fs-7 mb-3">${escapeHtml(fiche.pourquoi_ce_rapprochement || p.explication || 'Rapprochement proposé à partir du profil.')}</p>
+                        <div class="text-cyan-400 fs-7 fw-semibold"><i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Ouvrir l'analyse détaillée (Pop-up)</div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function ouvrirModalDetailPropice(idx) {
+        const p = postesPropicesGlobal[idx];
+        let fiche = p.fiche_explicable || p;
+        const code = p.code_avp || p.code_metier || p.code || '';
+        const labelSource = sourceMatchingActuelle === 'metiers' ? 'Métier' : 'AVP';
+        posteCibleActuel = code || p.intitule;
+        document.getElementById('final_avp_cible').value = code ? `${p.intitule} (${code})` : p.intitule;
+
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-briefcase me-2"></i>${labelSource} : ${escapeHtml(p.intitule || 'Résultat')}`;
+        document.getElementById('modal-body-content').innerHTML = `
+            <div class="d-flex align-items-center justify-content-between p-3 mb-3 bg-slate-950 rounded border border-cyan-500/30">
+                <div>
+                    <span class="text-slate-400 fs-7 d-block">Score estimé d’adéquation</span>
+                    <h3 class="fw-bold text-cyan-400 mb-0">${escapeHtml(p.score_matching || '—')}</h3>
+                </div>
+                <span class="badge bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 px-3 py-2 fs-7">${labelSource} · ${escapeHtml(code || 'Code non fourni')}</span>
+            </div>
+
+            <div class="space-y-3 fs-7 text-slate-300">
+                <div>
+                    <strong class="text-cyan-300 d-block mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Pourquoi ce rapprochement :</strong>
+                    <p class="mb-0 bg-slate-950/60 p-2.5 rounded">${escapeHtml(fiche.pourquoi_ce_rapprochement || p.explication || 'Rapprochement proposé par le moteur.')}</p>
+                </div>
+                <div>
+                    <strong class="text-emerald-400 d-block mb-1"><i class="fa-solid fa-circle-check me-1"></i> Points Forts :</strong>
+                    <p class="mb-0 bg-slate-950/60 p-2.5 rounded">${escapeHtml(fiche.points_forts || 'Non renseigné.')}</p>
+                </div>
+                <div>
+                    <strong class="text-amber-400 d-block mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Écarts / Axes de Progression :</strong>
+                    <p class="mb-0 bg-slate-950/60 p-2.5 rounded">${escapeHtml(fiche.ecarts_a_combler || 'Non renseigné.')}</p>
+                </div>
+                <div>
+                    <strong class="text-cyan-300 d-block mb-1"><i class="fa-solid fa-compass me-1"></i> Conseil :</strong>
+                    <p class="mb-0 bg-slate-950/60 p-2.5 rounded">${escapeHtml(fiche.conseil_bienveillant || 'À discuter lors de l’entretien.')}</p>
+                </div>
+            </div>`;
+
+        new bootstrap.Modal(document.getElementById('avpDetailModal')).show();
+    }
+
+    function fermerModalEtPasserStep3() {
+        const modalEl = bootstrap.Modal.getInstance(document.getElementById('avpDetailModal'));
+        if (modalEl) modalEl.hide();
+        switchStep(3);
+    }
+
+    // Génération des Assets & Fichiers PDF (Étape 3)
+    async function genererAssets() {
+        const btn = document.getElementById('btn-generer-assets');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i>Génération des Assets en cours...`;
+
+        const choixUtilisateur = {
+            civilite: document.getElementById('inj_civilite').value,
+            nationalite_francaise: document.getElementById('inj_nationalite').value === "true",
+            statut_pro: document.getElementById('inj_statut_pro').value,
+            citoyen_caledonien: document.getElementById('inj_citoyen').value === "true",
+            handicap: document.getElementById('inj_handicap').value === "true",
+            lieu_signature: document.getElementById('inj_lieu_signature').value || "Nouméa",
+            poste_intitule: posteCibleActuel || "Poste OPT-NC"
+        };
+
+        const donneesCandidat = {
+            nom_prenom: document.getElementById('inj_nom_prenom').value || "Candidat NC",
+            telephone: document.getElementById('inj_telephone').value || "",
+            email: document.getElementById('inj_email').value || "",
+            annees_residence: document.getElementById('inj_annees_residence').value || "",
+            diplomes: "Diplômes en adéquation"
+        };
+
+        if (donneesCandidat.email) {
+            document.getElementById('candidat_email').value = donneesCandidat.email;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/candidat/assets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profil_structurer: JSON.stringify(profilStructureGlobal || "Profil Standard"),
+                    id_avp_cible: posteCibleActuel || "Poste OPT-NC",
+                    choix_utilisateur: choixUtilisateur,
+                    donnees_candidat_raw: donneesCandidat
+                })
+            });
+
+            const data = await res.json();
+            const assets = data.resultat;
+
+            // Remplissage texte des assets
+            document.getElementById('asset-cv').innerHTML = `<p class="mb-0 text-slate-200">${assets.cv_oriente || "CV structuré généré avec succès."}</p>`;
+            document.getElementById('asset-lettre').innerHTML = `<p class="mb-0 text-slate-200">${assets.lettre_motivation || "Lettre de motivation générée."}</p>`;
+
+            // Virer les badges au vert
+            document.getElementById('badge-status-cv').className = "badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 fs-7";
+            document.getElementById('badge-status-cv').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>Prêt & Généré`;
+
+            document.getElementById('badge-status-lettre').className = "badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 fs-7";
+            document.getElementById('badge-status-lettre').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>Prêt & Rédigé`;
+
+            document.getElementById('badge-status-fiche').className = "badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 fs-7";
+            document.getElementById('badge-status-fiche').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>PDF Fusionné`;
+
+            document.getElementById('badge-status-attestation').className = "badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 fs-7";
+            document.getElementById('badge-status-attestation').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>PDF Fusionné`;
+
+        } catch (e) {
+            alert("Erreur Génération Assets : " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-gears me-2"></i>Lancer la Génération des Assets & PDF`;
+        }
+    }
+
+    // Soumission Cloud (Étape 4)
+    async function soumettreToutAuCloud() {
+        const email = document.getElementById('candidat_email').value;
+        const avp = document.getElementById('final_avp_cible').value;
+
+        if (!email) { alert("Veuillez entrer une adresse e-mail valide."); return; }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/candidat/postuler`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    profil_structurer: profilStructureGlobal || "Profil Standard",
+                    id_avp_cible: avp
+                })
+            });
+            const data = await res.json();
+            const box = document.getElementById('final-status-box');
+            box.classList.remove('d-none');
+            box.innerHTML = `
+                <h5 class="fw-bold"><i class="fa-solid fa-circle-check me-2"></i>Dossier Enregistré avec Succès !</h5>
+                <p class="mb-1">E-mail Candidat : <strong>${email}</strong></p>
+                <p class="mb-1">ID Candidature : <code>${data.stockage.candidature_id}</code></p>
+                <small class="text-slate-400">Archivé sur le bucket GCS et indexé dans Firestore.</small>
+            `;
+        } catch (e) {
+            alert("Erreur lors de l'enregistrement Cloud : " + e.message);
+        }
+    }
+</script>
+</body>
+</html>

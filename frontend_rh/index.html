@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace RH - OPT-NC (Copilote Sécurisé)</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; }
+        .ai-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+        
+        /* Style Zone Drag & Drop */
+        .drop-zone {
+            border: 2px dashed #06b6d4;
+            background-color: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            background-color: rgba(6, 182, 212, 0.1);
+            border-color: #22d3ee;
+        }
+    </style>
+</head>
+<body class="p-4 p-md-5">
+
+<div class="container">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-slate-700">
+        <div>
+            <h1 class="h3 fw-bold text-cyan-400 mb-1"><i class="fa-solid fa-user-shield me-2"></i>Espace Recruteur - OPT-NC</h1>
+            <p class="text-slate-400 mb-0">Direction des Ressources Humaines • Copilote & Analyse IA</p>
+        </div>
+        <div id="user-info-badge" class="d-none">
+            <span class="badge bg-slate-800 text-cyan-300 border border-cyan-500/30 p-2">
+                <i class="fa-solid fa-user-check me-1"></i> <span id="connected-email"></span>
+                <button class="btn btn-sm btn-outline-danger ms-2 py-0 px-1" onclick="deconnexionRH()">Déconnexion</button>
+            </span>
+        </div>
+    </div>
+
+    <!-- ÉCRAN DE CONNEXION -->
+    <div id="login-section" class="row justify-content-center mt-5">
+        <div class="col-md-5">
+            <div class="ai-card p-4 shadow-lg border border-cyan-500/30">
+                <h3 class="fw-bold text-cyan-400 mb-3 text-center"><i class="fa-solid fa-lock me-2"></i>Connexion Agent RH</h3>
+                <div class="mb-3">
+                    <label class="form-label text-slate-300 fs-7">Adresse E-mail professionnelle</label>
+                    <input type="email" id="login-email" class="form-control bg-slate-900 text-white border-slate-700" placeholder="nom@opt.nc">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-slate-300 fs-7">Mot de passe</label>
+                    <input type="password" id="login-password" class="form-control bg-slate-900 text-white border-slate-700" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary bg-cyan-500 border-0 w-100 py-2 text-dark fw-bold" onclick="connecterRH()">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Se Connecter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESPACE TABLEAU DE BORD PRINCIPAL -->
+    <div id="dashboard-section" class="d-none">
+        
+        <!-- VUE CATALOGUE DES AVP & ACCÈS -->
+        <div id="catalog-view">
+            <div class="ai-card p-4 mb-4 border border-cyan-500/30">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-cyan-400 m-0"><i class="fa-solid fa-clipboard-list me-2"></i>Catalogue des Postes & Habilitations AVP</h5>
+                    <button class="btn btn-sm btn-outline-info text-cyan-300 border-cyan-500/50" onclick="chargerDonneesDashboard()">
+                        <i class="fa-solid fa-rotate me-1"></i> Rafraîchir
+                    </button>
+                </div>
+                <p class="text-slate-400 fs-7 mb-3">Sélectionnez un AVP approuvé pour ouvrir son espace de travail et d'analyse IA.</p>
+                <div id="avps-catalog-container" class="row g-3">
+                    <div class="text-center text-slate-500 py-3">Chargement des AVP...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VUE ESPACE DE TRAVAIL DÉDIÉ À UN AVP -->
+        <div id="workspace-view" class="d-none">
+            <button class="btn btn-sm btn-outline-secondary mb-3 text-slate-300" onclick="retourCatalogue()">
+                <i class="fa-solid fa-arrow-left me-1"></i> Retour au Catalogue Général
+            </button>
+
+            <div class="row g-4">
+                <!-- COLONNE GAUCHE : FICHE RÉSUMÉ DE L'AVP -->
+                <div class="col-lg-4">
+                    <div class="ai-card p-4 border border-cyan-500/30 h-100">
+                        <span id="ws-avp-id" class="badge bg-slate-800 text-cyan-300 border border-cyan-500/30 font-monospace mb-2">ID_AVP</span>
+                        <h4 id="ws-avp-title" class="fw-bold text-white mb-2">Intitulé du poste</h4>
+                        <p class="text-slate-400 fs-7 mb-3"><i class="fa-solid fa-building me-1"></i> <span id="ws-avp-direction">DRH OPT-NC</span></p>
+                        
+                        <hr class="border-slate-700">
+                        
+                        <h6 class="text-cyan-400 fw-bold fs-7 mb-2"><i class="fa-solid fa-circle-check me-1"></i> Points Clés de l'Offre</h6>
+                        <ul id="ws-avp-skills" class="text-slate-300 fs-8 ps-3 mb-3">
+                            <!-- Rempli dynamiquement -->
+                        </ul>
+
+                        <div class="alert bg-slate-900 border-slate-700 text-slate-400 fs-8 p-3 mb-0">
+                            <i class="fa-solid fa-calendar-days me-1 text-cyan-400"></i> Clôture : <span id="ws-avp-cloture" class="text-white fw-bold">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLONNE DROITE : CANDIDATURES ET MULTI-UPLOAD WORKSPACE -->
+                <div class="col-lg-8">
+                    <!-- ENCART DRAG & DROP MULTI-FICHIERS -->
+                    <div class="ai-card p-4 mb-4 border border-cyan-500/30">
+                        <h5 class="fw-bold text-cyan-400 mb-2"><i class="fa-solid fa-cloud-arrow-up me-2"></i>Ajouter un dossier / plusieurs documents candidat</h5>
+                        <p class="text-slate-400 fs-8 mb-3">Glissez-déposez plusieurs fichiers simultanément (CV, lettre, diplômes en PDF/TXT).</p>
+                        
+                        <div class="mb-3">
+                            <input type="email" id="new-candidat-email" class="form-control bg-slate-900 text-white border-slate-700 fs-7" placeholder="Adresse e-mail du candidat (ex: candidat@opt.nc)">
+                        </div>
+
+                        <!-- ZONE MULTI DRAG & DROP -->
+                        <div id="drop-zone" class="drop-zone p-4 text-center mb-3" onclick="document.getElementById('new-candidat-file').click()">
+                            <input type="file" id="new-candidat-file" class="d-none" multiple onchange="gestionFichiersSelectionnes(this.files)">
+                            
+                            <div id="drop-zone-prompt">
+                                <i class="fa-solid fa-file-arrow-up text-cyan-400 fs-1 mb-2"></i>
+                                <p class="text-slate-300 fw-semibold mb-1 fs-7">Glissez-déposez vos fichiers ici, ou <span class="text-cyan-400 text-decoration-underline">parcourez</span></p>
+                                <span class="text-slate-500 fs-8">Sélection multiple acceptée (PDF, DOCX, TXT)</span>
+                            </div>
+
+                            <div id="files-preview-container" class="d-none text-start">
+                                <!-- Rempli dynamiquement -->
+                            </div>
+                        </div>
+
+                        <button class="btn btn-cyan bg-cyan-500 text-dark fw-bold w-100 py-2" onclick="uploaderEtAnalyserCandidatMultiple()">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Uploader les documents & Créer le dossier
+                        </button>
+                    </div>
+
+                    <!-- LISTE DES CANDIDATURES ASSOCIÉES -->
+                    <div class="ai-card p-3 mb-3 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-white m-0"><i class="fa-solid fa-users me-2"></i>Dossiers & Analyses IA</h5>
+                        <span id="candidats-count" class="badge bg-slate-800 text-slate-300 border border-slate-700">0 dossier(s)</span>
+                    </div>
+
+                    <div class="ai-card overflow-hidden">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="table-slate-800 text-slate-300 fs-7 text-uppercase">
+                                <tr>
+                                    <th>Candidat / E-mail</th>
+                                    <th>Score IA</th>
+                                    <th>Dossier Fichiers</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="candidatures-table-body" class="fs-7">
+                                <tr><td colspan="4" class="text-center text-slate-400 py-4">Sélectionnez un AVP pour voir les dossiers.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MODAL UNIVERSEL (SYNTHÈSE IA & CONSULTATION DOCUMENTS) -->
+<div class="modal fade" id="modalAnalyse" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-slate-900 text-white border border-cyan-500/30">
+            <div class="modal-header border-slate-800">
+                <h5 class="modal-title fw-bold text-cyan-400" id="modal-global-title"><i class="fa-solid fa-brain me-2"></i>Synthèse & Analyse Vertex AI</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modal-analyse-body">
+                <!-- Rempli dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS FIREBASE & LOGIQUE APP -->
+<script src="./config.local.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = window.COPILOTE_FIREBASE_CONFIG;
+    const BACKEND_RH_URL = window.COPILOTE_BACKEND_RH_URL || "http://localhost:8080";
+
+    if (!firebaseConfig?.apiKey || !firebaseConfig?.authDomain || !firebaseConfig?.projectId) {
+        document.getElementById("login-section").innerHTML = `
+            <div class="col-md-8">
+                <div class="alert alert-info" role="status">
+                    L'espace RH nécessite une configuration Firebase locale.
+                    Renseignez les paramètres dans <code>config.local.js</code> pour activer la connexion.
+                </div>
+            </div>`;
+    } else {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let avpActuelSelectionne = null;
+    let listeAvpsGlobal = [];
+    let fichiersSelectionnesTableau = [];
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            document.getElementById('login-section').classList.add('d-none');
+            document.getElementById('dashboard-section').classList.remove('d-none');
+            document.getElementById('user-info-badge').classList.remove('d-none');
+            document.getElementById('connected-email').innerText = user.email;
+            chargerDonneesDashboard();
+        } else {
+            document.getElementById('login-section').classList.remove('d-none');
+            document.getElementById('dashboard-section').classList.add('d-none');
+            document.getElementById('user-info-badge').classList.add('d-none');
+        }
+    });
+
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+            gestionFichiersSelectionnes(e.dataTransfer.files);
+        }, false);
+    }
+
+    window.gestionFichiersSelectionnes = function(files) {
+        if (!files || files.length === 0) return;
+        Array.from(files).forEach(file => {
+            const dejaPresent = fichiersSelectionnesTableau.some(f => f.name === file.name && f.size === file.size);
+            if (!dejaPresent) fichiersSelectionnesTableau.push(file);
+        });
+        document.getElementById('new-candidat-file').value = '';
+        rafraichirAffichageMiniatures();
+    };
+
+    window.rafraichirAffichageMiniatures = function() {
+        const promptDiv = document.getElementById('drop-zone-prompt');
+        const container = document.getElementById('files-preview-container');
+
+        if (fichiersSelectionnesTableau.length === 0) {
+            promptDiv.classList.remove('d-none');
+            container.classList.add('d-none');
+            container.innerHTML = '';
+            return;
+        }
+
+        promptDiv.classList.add('d-none');
+        container.classList.remove('d-none');
+        container.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-slate-700">
+                <small class="text-cyan-400 fw-bold"><i class="fa-solid fa-paperclip me-1"></i> ${fichiersSelectionnesTableau.length} fichier(s) prêt(s)</small>
+                <button type="button" class="btn btn-sm btn-link text-slate-400 text-decoration-none p-0 fs-8" onclick="document.getElementById('new-candidat-file').click(); event.stopPropagation();">
+                    <i class="fa-solid fa-plus me-1"></i>Ajouter d'autres
+                </button>
+            </div>
+        `;
+
+        fichiersSelectionnesTableau.forEach((file, index) => {
+            let iconClass = "fa-file-lines text-cyan-400";
+            if (file.name.endsWith('.pdf')) iconClass = "fa-file-pdf text-red-400";
+            else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) iconClass = "fa-file-word text-blue-400";
+
+            container.innerHTML += `
+                <div class="d-flex align-items-center justify-content-between p-2 bg-slate-900 border border-cyan-500/30 rounded-3 mb-2" onclick="event.stopPropagation()">
+                    <div class="d-flex align-items-center overflow-hidden me-2">
+                        <div class="bg-slate-800 p-2 rounded me-2">
+                            <i class="fa-solid ${iconClass} fs-5"></i>
+                        </div>
+                        <div class="text-truncate">
+                            <div class="text-white fw-bold fs-8 text-truncate">${file.name}</div>
+                            <span class="text-slate-400 fs-9">${(file.size / 1024).toFixed(1)} KB</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1 flex-shrink-0" onclick="retirerFichier(${index}, event)">
+                        <i class="fa-solid fa-trash-can fs-7"></i>
+                    </button>
+                </div>`;
+        });
+    };
+
+    window.retirerFichier = function(index, event) {
+        if (event) event.stopPropagation();
+        fichiersSelectionnesTableau.splice(index, 1);
+        rafraichirAffichageMiniatures();
+    };
+
+    window.connecterRH = async function() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-password').value;
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (error) {
+            alert("Erreur de connexion : " + error.message);
+        }
+    };
+
+    window.deconnexionRH = async function() { await signOut(auth); };
+
+    window.chargerDonneesDashboard = async function() {
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        const container = document.getElementById('avps-catalog-container');
+
+        try {
+            const res = await fetch(`${BACKEND_RH_URL}/api/rh/avps-disponibles`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            listeAvpsGlobal = data.avps || [];
+
+            if (listeAvpsGlobal.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center text-slate-400 py-2">Aucun AVP disponible.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            listeAvpsGlobal.forEach(avp => {
+                let badgeStatut = '';
+                let actionBtn = '';
+
+                if (avp.statut_acces_agent === 'approuve' || avp.statut_acces_agent === 'accordee') {
+                    badgeStatut = `<span class="badge bg-success/20 text-success border border-success/40">Approuvé</span>`;
+                    actionBtn = `<button class="btn btn-sm btn-cyan bg-cyan-500 text-dark fw-bold" onclick="ouvrirEspaceAvp('${avp.id_avp}')"><i class="fa-solid fa-folder-open me-1"></i> Ouvrir l'espace</button>`;
+                } else if (avp.statut_acces_agent === 'en_attente') {
+                    badgeStatut = `<span class="badge bg-warning/20 text-warning border border-warning/40">En attente</span>`;
+                    actionBtn = `<button class="btn btn-sm btn-outline-warning" disabled>En attente de validation</button>`;
+                } else {
+                    badgeStatut = `<span class="badge bg-slate-800 text-slate-400 border border-slate-700">Non demandé</span>`;
+                    actionBtn = `<button class="btn btn-sm btn-outline-cyan" onclick="demanderAcces('${avp.id_avp}')"><i class="fa-solid fa-key me-1"></i> Demander l'accès</button>`;
+                }
+
+                container.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="bg-slate-900 border border-slate-700 rounded-3 p-3 d-flex flex-column justify-content-between h-100">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-slate-800 text-cyan-300 border border-cyan-500/30 font-monospace">${avp.id_avp}</span>
+                                    ${badgeStatut}
+                                </div>
+                                <h6 class="fw-bold text-white mb-1">${avp.intitule}</h6>
+                                <p class="text-slate-400 fs-8 mb-3"><i class="fa-solid fa-building me-1"></i> ${avp.direction || 'DRH OPT-NC'}</p>
+                            </div>
+                            <div class="text-end mt-2">${actionBtn}</div>
+                        </div>
+                    </div>`;
+            });
+        } catch (e) {
+            container.innerHTML = `<div class="col-12 text-center text-red-400 py-2">Erreur : ${e.message}</div>`;
+        }
+    };
+
+    window.demanderAcces = async function(idAvp) {
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        try {
+            const res = await fetch(`${BACKEND_RH_URL}/api/rh/demander-acces-avp`, {
+                method: 'POST',
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ id_avp: idAvp })
+            });
+            const data = await res.json();
+            alert(data.message || "Demande enregistrée !");
+            chargerDonneesDashboard();
+        } catch (e) { alert("Erreur : " + e.message); }
+    };
+
+    window.ouvrirEspaceAvp = function(idAvp) {
+        avpActuelSelectionne = listeAvpsGlobal.find(a => a.id_avp === idAvp);
+        if (!avpActuelSelectionne) return;
+
+        document.getElementById('ws-avp-id').innerText = avpActuelSelectionne.id_avp;
+        document.getElementById('ws-avp-title').innerText = avpActuelSelectionne.intitule;
+        document.getElementById('ws-avp-direction').innerText = avpActuelSelectionne.direction;
+        document.getElementById('ws-avp-cloture').innerText = avpActuelSelectionne.date_cloture ? new Date(avpActuelSelectionne.date_cloture).toLocaleDateString() : 'Non spécifiée';
+
+        const skillsContainer = document.getElementById('ws-avp-skills');
+        skillsContainer.innerHTML = '';
+        const competences = avpActuelSelectionne.competences_requises || ["Gestion administrative", "Communication"];
+        competences.forEach(c => {
+            skillsContainer.innerHTML += `<li>${typeof c === 'string' ? c : c.name || 'Compétence clé'}</li>`;
+        });
+
+        document.getElementById('catalog-view').classList.add('d-none');
+        document.getElementById('workspace-view').classList.remove('d-none');
+
+        chargerCandidaturesPourAvp(idAvp);
+    };
+
+    window.retourCatalogue = function() {
+        document.getElementById('workspace-view').classList.add('d-none');
+        document.getElementById('catalog-view').classList.remove('d-none');
+        avpActuelSelectionne = null;
+    };
+
+    window.chargerCandidaturesPourAvp = async function(idAvp) {
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        const tbody = document.getElementById('candidatures-table-body');
+        const countBadge = document.getElementById('candidats-count');
+
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-cyan-400 py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Chargement des dossiers...</td></tr>`;
+
+        try {
+            const res = await fetch(`${BACKEND_RH_URL}/api/rh/candidatures?avp_id=${encodeURIComponent(idAvp)}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            
+            tbody.innerHTML = '';
+            if (!data.candidatures || data.candidatures.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-slate-400 py-4">Aucun dossier candidat pour cet AVP. Uploadez des fichiers ci-dessus.</td></tr>`;
+                countBadge.innerText = "0 dossier(s)";
+                return;
+            }
+
+            countBadge.innerText = `${data.candidatures.length} dossier(s)`;
+            data.candidatures.forEach(c => {
+                const analyseData = c.analyse_vertex || c.analyse_rh || c.synthese_ia;
+                const score = analyseData && analyseData.score_adequation ? analyseData.score_adequation + '%' : 'En attente';
+                
+                // Récupération blindée des fichiers
+                let documentsList = c.documents_rh_workspace || c.documents || c.pieces_jointes || [];
+                if (typeof documentsList === 'string') {
+                    documentsList = [{ nom_fichier: "Document", gcs_path: documentsList, download_url: documentsList }];
+                } else if (!Array.isArray(documentsList)) {
+                    documentsList = documentsList ? [documentsList] : [];
+                }
+                
+                const nbFichiers = documentsList.length;
+                const docsSafeguard = encodeURIComponent(JSON.stringify(documentsList)).replace(/'/g, '%27');
+                const analyseSafeguard = analyseData ? encodeURIComponent(JSON.stringify(analyseData)).replace(/'/g, '%27') : '';
+                
+                let actionIA = analyseData ? 
+                    `<button class="btn btn-sm btn-outline-success me-1" onclick='ouvrirModalAnalyseSafe("${analyseSafeguard}")'><i class="fa-solid fa-brain me-1"></i> Synthèse</button>` :
+                    `<button class="btn btn-sm btn-outline-info me-1" onclick="analyserCandidat('${c.candidature_id}')"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Lancer IA</button>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <strong class="text-white d-block">${c.email || c.nom_candidat || 'Candidat'}</strong>
+                            <small class="text-slate-400">ID: ${c.candidature_id.substring(0,8)}...</small>
+                        </td>
+                        <td><span class="badge bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">${score}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary text-cyan-300 border-cyan-500/40 bg-slate-900 px-3 py-1" onclick='ouvrirModalDocumentsSafe("${docsSafeguard}")' title="Consulter la liste des fichiers">
+                                <i class="fa-solid fa-folder-open text-cyan-400 me-2"></i> ${nbFichiers} fichier(s)
+                            </button>
+                        </td>
+                        <td class="text-end">
+                            ${actionIA}
+                        </td>
+                    </tr>`;
+            });
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-red-400 py-4">Erreur : ${e.message}</td></tr>`;
+        }
+    };
+
+    window.ouvrirModalDocumentsSafe = function(encodedJson) {
+        try {
+            const documents = JSON.parse(decodeURIComponent(encodedJson));
+            ouvrirModalDocuments(documents);
+        } catch (e) {
+            console.error("Erreur de décodage des documents :", e);
+            alert("Impossible d'afficher les documents pour ce dossier.");
+        }
+    };
+
+    window.ouvrirModalAnalyseSafe = function(encodedJson) {
+        try {
+            const analyse = JSON.parse(decodeURIComponent(encodedJson));
+            afficherModalAnalyse(analyse);
+        } catch (e) {
+            console.error("Erreur de décodage de l'analyse :", e);
+            alert("Impossible d'afficher la synthèse IA.");
+        }
+    };
+
+    window.ouvrirModalDocuments = function(documents) {
+        document.getElementById('modal-global-title').innerHTML = `<i class="fa-solid fa-folder-tree me-2"></i>Documents du Workspace Candidat`;
+        const body = document.getElementById('modal-analyse-body');
+        
+        if (!documents || documents.length === 0) {
+            body.innerHTML = `<p class="text-slate-400 text-center py-4">Aucun document associé à ce dossier.</p>`;
+        } else {
+            let html = `<div class="list-group bg-slate-900">`;
+            documents.forEach(doc => {
+                const downloadUrl = doc.download_url || (doc.gcs_path ? doc.gcs_path.replace('gs://', 'https://storage.googleapis.com/') : '#');
+                let icon = "fa-file-lines text-cyan-400";
+                const nomFichier = doc.nom_fichier || (typeof doc === 'string' ? doc : 'Document candidat');
+                if (nomFichier.endsWith('.pdf')) icon = "fa-file-pdf text-red-400";
+                else if (nomFichier.endsWith('.doc') || nomFichier.endsWith('.docx')) icon = "fa-file-word text-blue-400";
+
+                html += `
+                    <div class="list-group-item bg-slate-800 border-slate-700 text-white d-flex justify-content-between align-items-center mb-2 rounded p-3">
+                        <div class="d-flex align-items-center overflow-hidden me-3">
+                            <i class="fa-solid ${icon} fs-4 me-3"></i>
+                            <div class="text-truncate">
+                                <strong class="text-white d-block text-truncate">${nomFichier}</strong>
+                                <small class="text-slate-400 font-monospace fs-9">Stocké sur Cloud Storage</small>
+                            </div>
+                        </div>
+                        <a href="${downloadUrl}" target="_blank" class="btn btn-sm btn-cyan bg-cyan-500 text-dark fw-bold flex-shrink-0">
+                            <i class="fa-solid fa-download me-1"></i> Télécharger
+                        </a>
+                    </div>`;
+            });
+            html += `</div>`;
+            body.innerHTML = html;
+        }
+        new bootstrap.Modal(document.getElementById('modalAnalyse')).show();
+    };
+
+    window.uploaderEtAnalyserCandidatMultiple = async function() {
+        const user = auth.currentUser;
+        if (!user || !avpActuelSelectionne) return;
+
+        const emailInput = document.getElementById('new-candidat-email').value;
+
+        if (fichiersSelectionnesTableau.length === 0) {
+            alert("Veuillez glisser ou sélectionner au moins un fichier à uploader.");
+            return;
+        }
+
+        const token = await user.getIdToken();
+        const formData = new FormData();
+
+        fichiersSelectionnesTableau.forEach(file => {
+            formData.append("files", file);
+        });
+
+        const emailCandidat = emailInput || "candidat@opt.nc";
+        const idAvp = encodeURIComponent(avpActuelSelectionne.id_avp);
+
+        const url = `${BACKEND_RH_URL}/api/rh/candidature/creer-et-uploader-multiple?id_avp_cible=${idAvp}&email_candidat=${encodeURIComponent(emailCandidat)}`;
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.status === 'success') {
+                alert("Dossier candidat et documents multiples enregistrés !");
+                document.getElementById('new-candidat-email').value = '';
+                fichiersSelectionnesTableau = [];
+                rafraichirAffichageMiniatures();
+                chargerCandidaturesPourAvp(avpActuelSelectionne.id_avp);
+            } else {
+                alert("Erreur lors de l'upload : " + (data.detail || data.message || "Erreur inconnue"));
+            }
+        } catch (e) {
+            alert("Erreur réseau/upload : " + e.message);
+        }
+    };
+
+    window.analyserCandidat = async function(candidatureId) {
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        
+        alert("Lancement de l'analyse Vertex AI Gemini 1.5 Flash pour ce dossier...");
+        try {
+            const res = await fetch(`${BACKEND_RH_URL}/api/rh/candidature/${candidatureId}/analyser`, {
+                method: 'POST',
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok && data.status === 'success') {
+                afficherModalAnalyse(data.analyse_rh);
+                chargerCandidaturesPourAvp(avpActuelSelectionne.id_avp);
+            } else {
+                alert("Erreur d'analyse.");
+            }
+        } catch (e) {
+            alert("Erreur : " + e.message);
+        }
+    };
+
+    window.afficherModalAnalyse = function(analyse) {
+        document.getElementById('modal-global-title').innerHTML = `<i class="fa-solid fa-brain me-2"></i>Synthèse & Analyse Vertex AI`;
+        const body = document.getElementById('modal-analyse-body');
+        body.innerHTML = `
+            <div class="mb-3">
+                <h5 class="text-cyan-400 fw-bold">Score d'Adéquation : ${analyse.score_adequation}%</h5>
+            </div>
+            <div class="mb-3">
+                <h6 class="text-white fw-bold"><i class="fa-solid fa-thumbs-up text-success me-2"></i>Points Forts :</h6>
+                <ul class="text-slate-300 fs-7">${(analyse.points_forts || []).map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+            <div class="mb-3">
+                <h6 class="text-white fw-bold"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Points de Vigilance :</h6>
+                <ul class="text-slate-300 fs-7">${(analyse.points_vigilance || []).map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+            <div class="mb-3">
+                <h6 class="text-white fw-bold"><i class="fa-solid fa-clipboard-question text-info me-2"></i>Questions pour le Jury :</h6>
+                <ul class="text-slate-300 fs-7">${(analyse.questions_jury || []).map(q => `<li>${q}</li>`).join('')}</ul>
+            </div>
+            <div class="alert bg-slate-800 border-slate-700 text-slate-300 fs-7">
+                <strong>Avis Global :</strong> ${analyse.avis_general}
+            </div>
+        `;
+        new bootstrap.Modal(document.getElementById('modalAnalyse')).show();
+    };
+    }
+</script>
+</body>
+</html>

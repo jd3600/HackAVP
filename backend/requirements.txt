@@ -1,0 +1,13 @@
+fastapi>=0.115.0
+uvicorn>=0.30.0
+duckdb>=1.0.0
+pandas>=2.0.0
+google-genai>=1.0.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+google-cloud-firestore
+google-cloud-storage
+pypdf
+reportlab
+python-multipart
+requests>=2.32.0
