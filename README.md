@@ -1,4 +1,4 @@
-# Copilote RH OPT+ — dossier de présentation
+# Copilote RH OPT+ 
 
 Cette copie rassemble les éléments utiles à l'examen du prototype par un jury :
 le parcours candidat, l'espace RH, les deux API, les modèles PDF et les supports
